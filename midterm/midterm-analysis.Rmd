@@ -1,0 +1,95 @@
+---
+title: "Untitled"
+author: "Travis Deason"
+date: "2/24/2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm( list = ls()); cat("\014")  # Clear environment
+set.seed(42)
+#install.packages('lmtest')
+#install.packages('fpp')
+#install.packages('forecast')
+require(forecast)
+require(fpp)
+require(lmtest)
+require(plotly)
+require(Hmisc)
+require(tidyr)
+require(dplyr)
+require(ggplot2)
+require(plyr)
+require(reshape2)
+```
+
+```{r}
+temps<-read.csv('data/SouthernTemp.csv')
+#names(temps) <- sapply(names(temps), tolower)
+names(temps) <- c('year', 'temp')
+```
+
+### a.	Plot the temperature difference (y) versus the year (x).
+
+```{r}
+plot(temp~year, data=temps)
+```
+
+
+### b.	Fit a simple linear regression model with the temperature difference as the response and the year as the explanatory variable.  
+
+```{r}
+mod <- lm(temp~year, data=temps)
+
+slope <- mod$coefficients[2]
+intercept <- mod$coefficients[1]
+
+ggplot(data=temps, aes(x=year, y=temp, main='Fitted lienar model of year vs temp')) + 
+    geom_point(color= 'red') +
+    geom_abline(intercept=intercept, slope=slope, color='black', size=.2)
+```
+
+
+### c.	Plot the residuals from this fit.  Copy and paste this plot below.
+
+```{r}
+temps$resid <- mod$residuals
+
+ggplot(data=temps, aes(x=year, y=resid, main='Residuals of GLM year vs temp')) + 
+    geom_point(color= 'red') +
+  geom_abline(intercept=0, slope=0, color='black', size=.5)
+```
+
+
+### d.	Is there any evidence that these residuals are serially correlated?  Use the tools we have studied in class to make a convincing argument one way or the other.  
+
+```{r}
+#create new varaible for log of temperature
+temps$logtemp <- log(temps$temp + 1)
+#autocoorelation plot
+acf(temps$temp, lag.max=5, type='correlation')
+#partial autocoorelation plot
+pacf(temps$temp, lag.max=5)
+#Durbin Watson Test
+dwtest(mod, alternative='greater')
+```
+
+
+>* Yes there is evidence that there is autocoorelation in the variables, this is based on a linear dropoff in the autocoorelation  plot based on lag, (values are highly dependent on the previous 5 variables qith an autocoorelation as high as .8), and a Durbin Watson test score of .4412 (with a p-value of ~0).  Based on these data, we will reject the null hypothesis that there is no autocoorelation or serial coorealation present in the dataset.
+
+
+*e.	Account for any serial correlation (if you deem there is significant serial correlation present) and report the final model both in terms of the regression coefficients and correlation structure if applicable. Is your final model fit a stationary model or a nonstationary one? 
+
+```{r}
+#Dickey Fuller test for Stationarity
+adf.test(temps$logtemp, alternative= 'stationary')
+```
+
+>* Bbased on the Dickey Fuller test, with the null hypothesis being that the data is not stationary, we fail to reject the null hypothesis with a p-value of .3522, which is supported by 
+
+*f.	For the final model, provide some statistical evidence that the residuals are no longer serially correlated.
+
+
+
+*g.	In words (you do not have to do it), state how you would modify your model to answer/gain insight to the following question. Is the rate of change that we see over time for the temp. data constant or does it increase over time?

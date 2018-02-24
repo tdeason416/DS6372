@@ -1,0 +1,22 @@
+---
+title: "Midterm"
+author: "Travis Deason"
+date: "2/24/2018"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Question 9 / 10
+```{r}
+score_base = 1
+score_adj = .10
+sd = 1.1 * .3
+
+power.t.test(n=NULL, delta=score_adj-score_base, sd=sd, sig.level = .05, power=.8)
+power.t.test(n=4, delta=score_adj-score_base, sd=sd, sig.level = .01)
+```
+
+
